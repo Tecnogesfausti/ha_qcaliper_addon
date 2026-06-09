@@ -13,13 +13,13 @@ boot: auto
 init: false
 homeassistant_api: true
 ingress: true
-ingress_port: 8080
+ingress_port: 6666
 panel_icon: mdi:water-plus
 panel_title: QCaliper
 map:
   - data:rw
   - config:ro
 ports:
-  8080/tcp: 8080
+  6666/tcp: 6666
 options: {}
 schema: {}

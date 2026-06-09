@@ -2,7 +2,7 @@
 set -euo pipefail
 
 mkdir -p /data/resultados
-: "${PORT:=8080}"
+: "${PORT:=6666}"
 : "${RESULTS_DIR:=/data/resultados}"
 : "${HA_URL:=http://supervisor/core}"
 : "${HA_TOKEN:=${SUPERVISOR_TOKEN:-}}"

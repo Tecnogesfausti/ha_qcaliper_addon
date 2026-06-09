@@ -102,3 +102,7 @@ La app marca una prueba como sospechosa si no alcanza referencias iniciales de c
 ## Final sin pulsos
 
 Los perfiles de fregadero, cisterna y lavadora usan la duracion como maximo de seguridad. Si la app detecta pulsos y despues pasan varios segundos sin nuevos pulsos, toma la muestra final automaticamente y queda esperando la lectura real final del contador. Para riego por relé, este comportamiento puede desactivarse con `Final sin pulsos = No`.
+
+## Acceso en Home Assistant
+
+Con `ingress: true`, Home Assistant debe mostrar el boton `Open Web UI` en la ficha del add-on.

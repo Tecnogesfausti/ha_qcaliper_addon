@@ -2,6 +2,9 @@
 
 All notable changes to this add-on will be documented in this file.
 
+## 1.0.13
+- Fixed history JSONL newline escaping so the add-on starts correctly after saving historical summaries.
+
 ## 1.0.7
 - Added client-side logging for the connection test and request/response traces.
 - Historical mode can load trials from the add-on server.

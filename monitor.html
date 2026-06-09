@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f766e" />
+    <title>Monitor Pulsos H2O</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>Monitor Pulsos</h1>
+          <p id="statusText">Esperando lectura</p>
+        </div>
+        <button id="toggleButton" type="button">Pausar</button>
+      </header>
+
+      <section class="panel">
+        <h2>Pulsos en crudo</h2>
+        <div class="monitor-grid">
+          <article class="monitor-card">
+            <span>Caudalimetro</span>
+            <strong id="pulsosCaudalimetro">--</strong>
+            <small id="deltaCaudalimetro">Delta -- · -- p/s</small>
+          </article>
+          <article class="monitor-card">
+            <span>Pulsometro</span>
+            <strong id="pulsosPulsometro">--</strong>
+            <small id="deltaPulsometro">Delta -- · -- p/s</small>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Lecturas auxiliares</h2>
+        <div class="metric-grid">
+          <div class="metric"><span>Litros caudalimetro</span><strong id="litrosCaudalimetro">--</strong></div>
+          <div class="metric"><span>Litros pulsometro</span><strong id="litrosPulsometro">--</strong></div>
+          <div class="metric"><span>Factor caudalimetro</span><strong id="factorCaudalimetro">--</strong></div>
+          <div class="metric"><span>Factor pulsometro</span><strong id="factorPulsometro">--</strong></div>
+          <div class="metric"><span>Temporal caudalimetro</span><strong id="temporalCaudalimetro">--</strong></div>
+          <div class="metric"><span>Temporal pulsometro</span><strong id="temporalPulsometro">--</strong></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Registro</h2>
+        <div class="button-row">
+          <button id="markButton" class="secondary-button" type="button">Marcar evento</button>
+          <button id="clearButton" class="secondary-button" type="button">Limpiar</button>
+          <button id="downloadButton" class="secondary-button" type="button">Descargar JSON</button>
+        </div>
+        <div id="logList" class="history-list empty">Sin muestras</div>
+      </section>
+    </main>
+    <script src="monitor.js"></script>
+  </body>
+</html>

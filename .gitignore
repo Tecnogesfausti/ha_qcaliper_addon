@@ -1,0 +1,4 @@
+__pycache__/
+resultados/
+*.pyc
+calibreriego-*.json

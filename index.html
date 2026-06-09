@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f766e" />
+    <title>Calibre Riego</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>Calibre Riego</h1>
+          <p id="connectionStatus">Sin conexion configurada</p>
+        </div>
+        <button id="emergencyButton" class="danger-button" type="button">Parada</button>
+      </header>
+
+      <section class="panel">
+        <h2>Conexion</h2>
+        <div class="field-grid">
+          <label>
+            <span>Home Assistant URL</span>
+            <input id="haUrl" type="url" value="http://192.168.1.130:8123" placeholder="http://192.168.1.130:8123" autocomplete="off" />
+          </label>
+          <input id="haToken" type="hidden" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI2NTQ4ODRjMTIxMjI0ZjE5YTI4MWY0NWM0YTI3OWU0NyIsImlhdCI6MTc4MDg2NDg0MiwiZXhwIjoyMDk2MjI0ODQyfQ.cBxwu4x2g92fAyxsh-75hJBGmm8g95RyTPFKoEeZpkY" />
+        </div>
+        <div class="button-row">
+          <button id="saveConfigButton" type="button">Guardar</button>
+          <button id="testConnectionButton" type="button" class="secondary-button">Probar</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Prueba</h2>
+        <div class="field-grid">
+          <label>
+            <span>Perfil</span>
+            <select id="flowProfile">
+              <option value="drip">Goteros bajo caudal</option>
+              <option value="standard" selected>Riego estandar</option>
+              <option value="frequentSink">Fregadero 5-7 L</option>
+              <option value="cistern">Cisterna 5-7 L</option>
+              <option value="washer">Lavadora caudal medio</option>
+              <option value="spray">Difusores alto caudal</option>
+              <option value="custom">Manual</option>
+            </select>
+          </label>
+          <label>
+            <span>Sensor</span>
+            <select id="sensorMode">
+              <option value="both">Ambos</option>
+              <option value="caudalimetro">Caudalimetro</option>
+              <option value="pulsometro">Pulsometro</option>
+            </select>
+          </label>
+          <label>
+            <span>Rele</span>
+            <select id="relaySelect"></select>
+          </label>
+          <label>
+            <span>Duracion</span>
+            <input id="durationSeconds" type="number" min="1" max="1800" step="1" value="60" inputmode="numeric" />
+          </label>
+          <label>
+            <span>Margen final</span>
+            <input id="settleSeconds" type="number" min="0" max="30" step="1" value="3" inputmode="numeric" />
+          </label>
+          <label>
+            <span>Muestreo</span>
+            <input id="sampleIntervalSeconds" type="number" min="1" max="60" step="1" value="5" inputmode="numeric" />
+          </label>
+          <label>
+            <span>Final sin pulsos</span>
+            <select id="autoStopMode">
+              <option value="off">No</option>
+              <option value="on">Si</option>
+            </select>
+          </label>
+          <label>
+            <span>Inactividad</span>
+            <input id="idleStopSeconds" type="number" min="2" max="120" step="1" value="10" inputmode="numeric" />
+          </label>
+          <label>
+            <span>Lectura real inicial</span>
+            <input id="realInitial" type="number" step="0.001" inputmode="decimal" />
+          </label>
+          <label>
+            <span>Lectura real final</span>
+            <input id="realFinal" type="number" step="0.001" inputmode="decimal" placeholder="Despues de la prueba" />
+          </label>
+          <label class="full-span">
+            <span>Notas</span>
+            <input id="trialNotes" type="text" placeholder="Zona, grifo, cubo, incidencias" autocomplete="off" />
+          </label>
+        </div>
+        <div class="button-row">
+          <button id="startButton" type="button">Iniciar calibracion</button>
+          <button id="finishManualButton" type="button" class="secondary-button" disabled>Calcular resultado</button>
+        </div>
+        <div class="progress-box" aria-live="polite">
+          <div class="progress-line">
+            <span id="runStatus">Preparado</span>
+            <strong id="countdown">--</strong>
+          </div>
+          <div class="progress-line">
+            <span>Muestras registradas</span>
+            <strong id="sampleCount">0</strong>
+          </div>
+          <progress id="progressBar" value="0" max="100"></progress>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Resultado</h2>
+        <div id="resultList" class="result-list empty">Sin prueba calculada</div>
+        <div class="button-row">
+          <button id="saveTrialButton" type="button" disabled>Guardar prueba</button>
+          <button id="saveRealReadingsButton" type="button" class="secondary-button" disabled>Guardar lectura real en HA</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Historial local</h2>
+        <div class="button-row">
+          <button id="exportHistoryButton" type="button" class="secondary-button">Exportar JSON</button>
+          <button id="exportCsvButton" type="button" class="secondary-button">Exportar CSV</button>
+          <button id="clearHistoryButton" type="button" class="secondary-button">Vaciar</button>
+        </div>
+        <div id="historyList" class="history-list empty">Sin pruebas guardadas</div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

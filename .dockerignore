@@ -1,0 +1,7 @@
+.git
+resultados
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+node_modules

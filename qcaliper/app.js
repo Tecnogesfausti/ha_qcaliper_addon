@@ -293,7 +293,7 @@ async function testConnection() {
   try {
     setBusy(true);
     console.log("[qcaliper] testConnection start");
-    const info = await requestHa("/api/config");
+    const info = await requestHa("/api/");
     console.log("[qcaliper] testConnection ok", info);
     updateConnectionStatus("Conexion correcta", true);
   } catch (error) {

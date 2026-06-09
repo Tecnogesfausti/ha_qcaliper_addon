@@ -246,14 +246,17 @@ class Handler(SimpleHTTPRequestHandler):
                 data = response.read()
                 status = response.status
                 content_type = response.headers.get("Content-Type", "application/json")
+                print(f"[qcaliper] proxy {method} {target_path} -> {status}")
         except urllib.error.HTTPError as exc:
             data = exc.read() or json.dumps({"error": str(exc)}).encode("utf-8")
             status = exc.code
             content_type = exc.headers.get("Content-Type", "application/json")
+            print(f"[qcaliper] proxy {method} {target_path} -> {status} HTTPError")
         except (urllib.error.URLError, TimeoutError, OSError) as exc:
             data = json.dumps({"error": str(exc)}).encode("utf-8")
             status = 502
             content_type = "application/json"
+            print(f"[qcaliper] proxy {method} {target_path} -> 502 {exc}")
 
         self.send_response(status)
         self.send_header("Content-Type", content_type)

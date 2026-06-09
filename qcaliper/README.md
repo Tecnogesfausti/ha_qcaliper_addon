@@ -2,9 +2,11 @@
 
 ## Add-on de Home Assistant
 
+Cada cambio relevante debe ir acompañado de un bump de version en `qcaliper/config.yaml`.
+
 Este repositorio ya se puede empaquetar como add-on para Home Assistant.
 
-- Ingress habilitado en el puerto 8080.
+- Ingress habilitado en el puerto 6666.
 - Persistencia de pruebas en `/data/resultados`.
 - Acceso a Home Assistant con `SUPERVISOR_TOKEN` y `http://supervisor/core` por defecto.
 

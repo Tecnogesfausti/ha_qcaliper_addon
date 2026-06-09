@@ -174,10 +174,18 @@ async function loadServerTrials() {
   }
 }
 
-function analyzeHistoricalAdjustments() {
-  const dataset = buildHistoricalDataset();
-  const rows = dataset.sensors.map((sensor) => summarizeTrials(dataset.filtered, sensor));
-  renderHistoricalSummary(buildHistoricalSummary(rows, dataset.filtered.length, dataset.notes, dataset.from, dataset.to));
+async function analyzeHistoricalAdjustments() {
+  try {
+    setBusy(true);
+    const dataset = buildHistoricalDataset();
+    const current = await readCurrentSensorStats();
+    const rows = dataset.sensors.map((sensor) => summarizeTrials(dataset.filtered, sensor));
+    renderHistoricalSummary(buildHistoricalSummary(rows, dataset.filtered.length, dataset.notes, dataset.from, dataset.to, current));
+  } catch (error) {
+    renderHistoricalSummary(`No se pudo analizar el historico: ${error.message}`);
+  } finally {
+    setBusy(false);
+  }
 }
 
 function buildHistoricalDataset() {
@@ -270,7 +278,7 @@ function meanResultValue(trials, sensor, key) {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
-function buildHistoricalSummary(rows, totalTrials, notes, from, to) {
+function buildHistoricalSummary(rows, totalTrials, notes, from, to, current = null) {
   const rangeText = [from ? from.toLocaleString("es-ES") : "inicio", to ? to.toLocaleString("es-ES") : "fin"].join(" -> ");
   const lines = [
     `Pruebas usadas: ${totalTrials}`,
@@ -281,6 +289,17 @@ function buildHistoricalSummary(rows, totalTrials, notes, from, to) {
     lines.push(`${row.sensor}: ${row.count} pruebas, ${fmt(row.deltaReal, 2)} L reales, ${fmt(row.deltaPulsos, 0)} pulsos, factor actual ${fmt(row.factorActual, 6)}, factor nuevo ${fmt(row.pulsosPorLitroNuevo, 6)}, error HA ${fmt(row.errorHaPct, 2)} %`);
   });
   return lines.join("\n");
+}
+
+
+async function readCurrentSensorStats() {
+  const [litrosCaudalimetro, litrosPulsometro, factorCaudalimetro, factorPulsometro] = await Promise.all([
+    readEntityNumber(ENTITIES.litrosCaudalimetro),
+    readEntityNumber(ENTITIES.litrosPulsometro),
+    readEntityNumber(ENTITIES.factorCaudalimetro),
+    readEntityNumber(ENTITIES.factorPulsometro),
+  ]);
+  return { litrosCaudalimetro, litrosPulsometro, factorCaudalimetro, factorPulsometro };
 }
 
 function renderHistoricalSummary(text) {

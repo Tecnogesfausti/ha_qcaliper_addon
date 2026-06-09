@@ -2,6 +2,9 @@
 
 All notable changes to this add-on will be documented in this file.
 
+## 1.0.16
+- Historical analysis now compares trials against the current Home Assistant caudalimetro and pulsometro statistics.
+
 ## 1.0.15
 - Added a clear-history action that removes local and server-stored punctual and historical data.
 

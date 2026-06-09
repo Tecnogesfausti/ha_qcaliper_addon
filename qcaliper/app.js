@@ -292,7 +292,7 @@ function saveConfig() {
 async function testConnection() {
   try {
     setBusy(true);
-    await readEntityNumberAny(ENTITIES.pulsosSesionCaudalimetro, ENTITIES.pulsosCaudalimetro);
+    await requestHa("/api/config");
     updateConnectionStatus("Conexion correcta", true);
   } catch (error) {
     updateConnectionStatus(error.message, false);

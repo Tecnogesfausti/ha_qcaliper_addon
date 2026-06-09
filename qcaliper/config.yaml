@@ -19,5 +19,7 @@ panel_title: QCaliper
 map:
   - data:rw
   - config:ro
+ports:
+  8080/tcp: 8080
 options: {}
 schema: {}

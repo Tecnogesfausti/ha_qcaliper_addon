@@ -203,8 +203,7 @@ class Handler(SimpleHTTPRequestHandler):
             history_path.write_text(json.dumps(history, ensure_ascii=False, indent=2), encoding="utf-8")
 
             with (RESULTS_DIR / "history.jsonl").open("a", encoding="utf-8") as fh:
-                fh.write(json.dumps(history, ensure_ascii=False, separators=(",", ":")) + "
-")
+                fh.write(json.dumps(history, ensure_ascii=False, separators=(",", ":")) + "\n")
 
             self.send_json(200, {"ok": True, "id": history_id, "path": str(history_path)})
         except Exception as exc:

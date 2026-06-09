@@ -18,7 +18,15 @@
         <button id="emergencyButton" class="danger-button" type="button">Parada</button>
       </header>
 
-      <section class="panel">
+      <section class="panel mode-panel">
+        <div class="mode-switch" role="tablist" aria-label="Modo de calibracion">
+          <button id="modeSampleButton" type="button" class="mode-button active" aria-pressed="true">Muestreo puntual</button>
+          <button id="modeHistoryButton" type="button" class="mode-button" aria-pressed="false">Ajuste historico</button>
+        </div>
+        <p class="mode-help" id="modeHelp">Preparar una prueba corta o media con relé, lectura real inicial y lectura final.</p>
+      </section>
+
+      <section class="panel" id="connectionPanel">
         <h2>Conexion</h2>
         <div class="field-grid">
           <label>
@@ -33,8 +41,8 @@
         </div>
       </section>
 
-      <section class="panel">
-        <h2>Prueba</h2>
+      <section class="panel" id="sampleModePanel">
+        <h2>Prueba puntual</h2>
         <div class="field-grid">
           <label>
             <span>Perfil</span>
@@ -113,7 +121,46 @@
         </div>
       </section>
 
-      <section class="panel">
+      <section class="panel hidden" id="historyModePanel">
+        <h2>Ajuste historico</h2>
+        <div class="field-grid">
+          <label>
+            <span>Sensor</span>
+            <select id="historySensorMode">
+              <option value="caudalimetro">Caudalimetro</option>
+              <option value="pulsometro">Pulsometro</option>
+              <option value="both">Ambos</option>
+            </select>
+          </label>
+          <label>
+            <span>Fecha inicio</span>
+            <input id="historyFrom" type="datetime-local" />
+          </label>
+          <label>
+            <span>Fecha fin</span>
+            <input id="historyTo" type="datetime-local" />
+          </label>
+          <label>
+            <span>Lectura real inicial</span>
+            <input id="historyRealInitial" type="number" step="0.001" inputmode="decimal" />
+          </label>
+          <label>
+            <span>Lectura real final</span>
+            <input id="historyRealFinal" type="number" step="0.001" inputmode="decimal" />
+          </label>
+          <label class="full-span">
+            <span>Notas</span>
+            <input id="historyNotes" type="text" placeholder="Zona, periodo, observaciones" autocomplete="off" />
+          </label>
+        </div>
+        <div class="button-row">
+          <button id="historyAnalyzeButton" type="button">Calcular ajuste historico</button>
+          <button id="historyLoadButton" type="button" class="secondary-button">Cargar pruebas guardadas</button>
+        </div>
+        <div id="historySummary" class="history-summary empty">Sin analisis historico</div>
+      </section>
+
+      <section class="panel" id="resultPanel">
         <h2>Resultado</h2>
         <div id="resultList" class="result-list empty">Sin prueba calculada</div>
         <div class="button-row">

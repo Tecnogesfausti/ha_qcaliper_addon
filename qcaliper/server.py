@@ -145,6 +145,9 @@ class Handler(SimpleHTTPRequestHandler):
         if self.path == "/api/save-trial":
             self.handle_save_trial()
             return
+        if self.path == "/api/trials":
+            self.handle_list_trials()
+            return
         if self.path.startswith("/api/ha/"):
             self.proxy_home_assistant("POST")
             return
@@ -181,6 +184,25 @@ class Handler(SimpleHTTPRequestHandler):
         except Exception as exc:
             self.send_json(400, {"ok": False, "error": str(exc)})
 
+
+
+    def handle_list_trials(self):
+        try:
+            RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+            trials = []
+            jsonl = RESULTS_DIR / "trials.jsonl"
+            if jsonl.exists():
+                for line in jsonl.read_text(encoding="utf-8").splitlines():
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        trials.append(json.loads(line))
+                    except json.JSONDecodeError:
+                        continue
+            self.send_json(200, {"ok": True, "trials": trials})
+        except Exception as exc:
+            self.send_json(400, {"ok": False, "error": str(exc)})
 
     def handle_save_trial(self):
         try:

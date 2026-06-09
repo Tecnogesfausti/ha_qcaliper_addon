@@ -77,6 +77,20 @@ const els = {
   exportHistoryButton: document.querySelector("#exportHistoryButton"),
   exportCsvButton: document.querySelector("#exportCsvButton"),
   clearHistoryButton: document.querySelector("#clearHistoryButton"),
+  modeSampleButton: document.querySelector("#modeSampleButton"),
+  modeHistoryButton: document.querySelector("#modeHistoryButton"),
+  modeHelp: document.querySelector("#modeHelp"),
+  sampleModePanel: document.querySelector("#sampleModePanel"),
+  historyModePanel: document.querySelector("#historyModePanel"),
+  historySensorMode: document.querySelector("#historySensorMode"),
+  historyFrom: document.querySelector("#historyFrom"),
+  historyTo: document.querySelector("#historyTo"),
+  historyRealInitial: document.querySelector("#historyRealInitial"),
+  historyRealFinal: document.querySelector("#historyRealFinal"),
+  historyNotes: document.querySelector("#historyNotes"),
+  historyAnalyzeButton: document.querySelector("#historyAnalyzeButton"),
+  historyLoadButton: document.querySelector("#historyLoadButton"),
+  historySummary: document.querySelector("#historySummary"),
 };
 
 let activeTrial = null;
@@ -84,6 +98,8 @@ let latestResult = null;
 let timerId = null;
 let sampleTimerId = null;
 let relayWatchTimerId = null;
+let currentMode = "sample";
+let loadedServerTrials = [];
 
 init();
 
@@ -120,7 +136,152 @@ function init() {
   els.exportHistoryButton.addEventListener("click", exportHistory);
   els.exportCsvButton.addEventListener("click", exportCsv);
   els.clearHistoryButton.addEventListener("click", clearHistory);
+  els.modeSampleButton.addEventListener("click", () => setMode("sample"));
+  els.modeHistoryButton.addEventListener("click", () => setMode("history"));
+  els.historyAnalyzeButton.addEventListener("click", analyzeHistoricalAdjustments);
+  els.historyLoadButton.addEventListener("click", loadServerTrials);
+  setMode("sample");
 }
+
+function setMode(mode) {
+  currentMode = mode;
+  const sampleMode = mode === "sample";
+  els.modeSampleButton.classList.toggle("active", sampleMode);
+  els.modeHistoryButton.classList.toggle("active", !sampleMode);
+  els.modeSampleButton.setAttribute("aria-pressed", String(sampleMode));
+  els.modeHistoryButton.setAttribute("aria-pressed", String(!sampleMode));
+  els.sampleModePanel.classList.toggle("hidden", !sampleMode);
+  els.historyModePanel.classList.toggle("hidden", sampleMode);
+  els.resultList.parentElement.classList.toggle("hidden", !sampleMode);
+  els.historyList.parentElement.classList.toggle("hidden", !sampleMode);
+  els.modeHelp.textContent = sampleMode
+    ? "Preparar una prueba corta o media con relé, lectura real inicial y lectura final."
+    : "Comparar varios consumos entre fechas usando el historial guardado y las lecturas reales del contador.";
+}
+
+async function loadServerTrials() {
+  try {
+    setBusy(true);
+    const payload = await requestLocalGetJson("/api/trials");
+    loadedServerTrials = Array.isArray(payload.trials) ? payload.trials : [];
+    renderHistoricalSummary("Pruebas cargadas del servidor: " + loadedServerTrials.length);
+  } catch (error) {
+    renderHistoricalSummary(`No se pudieron cargar pruebas del servidor: ${error.message}`);
+  } finally {
+    setBusy(false);
+  }
+}
+
+function analyzeHistoricalAdjustments() {
+  const allTrials = [...readJson(STORAGE_KEYS.history, []), ...loadedServerTrials];
+  const from = parseDateTimeInput(els.historyFrom.value);
+  const to = parseDateTimeInput(els.historyTo.value);
+  const sensorMode = els.historySensorMode.value;
+  const filtered = allTrials.filter((trial) => {
+    const ts = new Date(trial.createdAt || trial.created_at || trial.timestamp_inicio || trial.timestamp || 0);
+    if (Number.isNaN(ts.getTime())) return false;
+    if (from && ts < from) return false;
+    if (to && ts > to) return false;
+    if (sensorMode !== "both" && trial.sensorMode && trial.sensorMode !== sensorMode) return false;
+    return true;
+  });
+
+  const sensors = sensorMode === "both" ? ["caudalimetro", "pulsometro"] : [sensorMode];
+  const rows = sensors.map((sensor) => summarizeTrials(filtered, sensor));
+  const notes = els.historyNotes.value.trim();
+  renderHistoricalSummary(buildHistoricalSummary(rows, filtered.length, notes, from, to));
+}
+
+function summarizeTrials(trials, sensor) {
+  const valid = trials.filter((trial) => trial && trial.valid !== false);
+  let deltaPulsos = 0;
+  let deltaLitrosHa = 0;
+  let deltaReal = 0;
+  let weightedDuration = 0;
+  let weightedError = 0;
+  let count = 0;
+
+  for (const trial of valid) {
+    const r = resultForSensor(trial, sensor);
+    if (!r) continue;
+    deltaPulsos += r.deltaPulsos;
+    deltaLitrosHa += r.deltaLitrosHa;
+    deltaReal += r.deltaReal;
+    weightedDuration += r.durationSeconds || 0;
+    weightedError += (r.errorPorcentaje || 0) * Math.max(1, r.deltaReal || 0);
+    count += 1;
+  }
+
+  const factorActual = meanResultValue(valid, sensor, "factorActual");
+  const factorCorreccion = deltaLitrosHa > 0 ? deltaReal / deltaLitrosHa : null;
+  const pulsosPorLitroNuevo = deltaReal > 0 ? deltaPulsos / deltaReal : null;
+  const litrosPorPulsoReal = deltaPulsos > 0 ? deltaReal / deltaPulsos : null;
+  const errorHaPct = deltaReal > 0 ? ((deltaLitrosHa - deltaReal) / deltaReal) * 100 : null;
+  const errorActualPct = deltaReal > 0 && factorActual ? (((deltaPulsos / factorActual) - deltaReal) / deltaReal) * 100 : null;
+
+  return {
+    sensor,
+    count,
+    deltaPulsos,
+    deltaLitrosHa,
+    deltaReal,
+    factorActual,
+    factorCorreccion,
+    pulsosPorLitroNuevo,
+    litrosPorPulsoReal,
+    errorHaPct,
+    errorActualPct,
+    avgDuration: count ? weightedDuration / count : 0,
+    avgError: deltaReal > 0 ? weightedError / deltaReal : 0,
+  };
+}
+
+function resultForSensor(trial, sensor) {
+  if (!trial) return null;
+  if (Array.isArray(trial.results)) {
+    const result = trial.results.find((item) => item?.key === sensor || item?.name?.toLowerCase().includes(sensor));
+    if (result) return result;
+  }
+  if (trial.results && !Array.isArray(trial.results) && trial.results[sensor]) return trial.results[sensor];
+  return null;
+}
+
+function meanResultValue(trials, sensor, key) {
+  const values = [];
+  for (const trial of trials) {
+    const r = resultForSensor(trial, sensor);
+    if (!r) continue;
+    const value = Number(r[key]);
+    if (Number.isFinite(value)) values.push(value);
+  }
+  if (!values.length) return null;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function buildHistoricalSummary(rows, totalTrials, notes, from, to) {
+  const rangeText = [from ? from.toLocaleString("es-ES") : "inicio", to ? to.toLocaleString("es-ES") : "fin"].join(" -> ");
+  const lines = [
+    `Pruebas usadas: ${totalTrials}`,
+    `Rango: ${rangeText}`,
+  ];
+  if (notes) lines.push(`Notas: ${notes}`);
+  rows.forEach((row) => {
+    lines.push(`${row.sensor}: ${row.count} pruebas, ${fmt(row.deltaReal, 2)} L reales, ${fmt(row.deltaPulsos, 0)} pulsos, factor actual ${fmt(row.factorActual, 6)}, factor nuevo ${fmt(row.pulsosPorLitroNuevo, 6)}, error HA ${fmt(row.errorHaPct, 2)} %`);
+  });
+  return lines.join("\n");
+}
+
+function renderHistoricalSummary(text) {
+  els.historySummary.className = text ? "history-summary" : "history-summary empty";
+  els.historySummary.textContent = text || "Sin analisis historico";
+}
+
+function parseDateTimeInput(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 
 function saveConfig() {
   const config = getConfig();
@@ -357,6 +518,16 @@ async function requestLocalJson(path, body) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
+  const payload = await response.json();
+  if (!response.ok || payload.ok === false) {
+    throw new Error(payload.error || `Servidor local responde ${response.status}`);
+  }
+  return payload;
+}
+
+
+async function requestLocalGetJson(path) {
+  const response = await fetch(path, { method: "GET" });
   const payload = await response.json();
   if (!response.ok || payload.ok === false) {
     throw new Error(payload.error || `Servidor local responde ${response.status}`);

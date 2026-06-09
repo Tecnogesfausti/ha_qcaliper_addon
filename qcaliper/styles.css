@@ -5,6 +5,46 @@
   color: #18211f;
 }
 
+.hidden {
+  display: none !important;
+}
+
+.mode-panel {
+  padding-bottom: 12px;
+}
+
+.mode-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.mode-button {
+  background: #e3ece9;
+  color: #18302d;
+  border: 1px solid #cbd8d4;
+}
+
+.mode-button.active {
+  background: #0f766e;
+  color: #fff;
+  border-color: #0f766e;
+}
+
+.mode-help {
+  margin: 12px 0 0;
+  color: #52615d;
+  font-size: 0.92rem;
+}
+
+.history-summary {
+  margin-top: 12px;
+  white-space: pre-wrap;
+  color: #18302d;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
 * {
   box-sizing: border-box;
 }

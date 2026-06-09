@@ -145,6 +145,9 @@ class Handler(SimpleHTTPRequestHandler):
         if self.path == "/api/save-trial":
             self.handle_save_trial()
             return
+        if self.path == "/api/save-history":
+            self.handle_save_history()
+            return
         if self.path == "/api/trials":
             self.handle_list_trials()
             return
@@ -185,6 +188,27 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_json(400, {"ok": False, "error": str(exc)})
 
 
+
+    def handle_save_history(self):
+        try:
+            history = self.read_json_body()
+            history_id = str(history.get("id") or int(time.time() * 1000))
+            safe_id = "".join(ch for ch in history_id if ch.isalnum() or ch in "-_")[:80] or str(int(time.time() * 1000))
+            RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+
+            history["server_saved_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            history["server_file"] = f"history-{safe_id}.json"
+
+            history_path = RESULTS_DIR / f"history-{safe_id}.json"
+            history_path.write_text(json.dumps(history, ensure_ascii=False, indent=2), encoding="utf-8")
+
+            with (RESULTS_DIR / "history.jsonl").open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps(history, ensure_ascii=False, separators=(",", ":")) + "
+")
+
+            self.send_json(200, {"ok": True, "id": history_id, "path": str(history_path)})
+        except Exception as exc:
+            self.send_json(400, {"ok": False, "error": str(exc)})
 
     def handle_list_trials(self):
         try:

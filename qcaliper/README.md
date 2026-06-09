@@ -106,3 +106,7 @@ Los perfiles de fregadero, cisterna y lavadora usan la duracion como maximo de s
 ## Acceso en Home Assistant
 
 Con `ingress: true`, Home Assistant debe mostrar el boton `Open Web UI` en la ficha del add-on.
+
+## Changelog
+
+See `CHANGELOG.md` for the version history.

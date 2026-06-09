@@ -292,9 +292,12 @@ function saveConfig() {
 async function testConnection() {
   try {
     setBusy(true);
-    await requestHa("/api/config");
+    console.log("[qcaliper] testConnection start");
+    const info = await requestHa("/api/config");
+    console.log("[qcaliper] testConnection ok", info);
     updateConnectionStatus("Conexion correcta", true);
   } catch (error) {
+    console.error("[qcaliper] testConnection failed", error);
     updateConnectionStatus(error.message, false);
   } finally {
     setBusy(false);
@@ -566,23 +569,29 @@ async function requestHa(path, options = {}) {
   const headers = { "Content-Type": "application/json" };
   if (!useLocalProxy) headers.Authorization = `Bearer ${haToken}`;
 
+  console.log("[qcaliper] requestHa", { path, url, method: options.method || "GET", useLocalProxy });
+
   const response = await fetch(url, {
     method: options.method || "GET",
     headers,
     body: options.body,
   });
 
+  const raw = await response.text();
+  console.log("[qcaliper] response", { path, url, status: response.status, ok: response.ok, raw: raw.slice(0, 300) });
+
   if (!response.ok) {
     let detail = "";
     try {
-      const payload = await response.json();
-      detail = payload.error ? `: ${payload.error}` : "";
-    } catch {}
+      const payload = raw ? JSON.parse(raw) : {};
+      detail = payload.error ? `: ${payload.error}` : raw ? `: ${raw}` : "";
+    } catch {
+      detail = raw ? `: ${raw}` : "";
+    }
     throw new Error(`Home Assistant responde ${response.status}${detail}`);
   }
 
-  const text = await response.text();
-  return text ? JSON.parse(text) : {};
+  return raw ? JSON.parse(raw) : {};
 }
 
 function calculateTrial(trial) {

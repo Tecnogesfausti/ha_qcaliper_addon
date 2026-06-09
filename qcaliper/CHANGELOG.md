@@ -2,6 +2,12 @@
 
 All notable changes to this add-on will be documented in this file.
 
+## 1.0.15
+- Added a clear-history action that removes local and server-stored punctual and historical data.
+
+## 1.0.14
+- Added clear-history support for local and server-stored trials and historical summaries.
+
 ## 1.0.13
 - Fixed history JSONL newline escaping so the add-on starts correctly after saving historical summaries.
 

@@ -148,6 +148,9 @@ class Handler(SimpleHTTPRequestHandler):
         if self.path == "/api/save-history":
             self.handle_save_history()
             return
+        if self.path == "/api/clear-history":
+            self.handle_clear_history()
+            return
         if self.path == "/api/trials":
             self.handle_list_trials()
             return
@@ -206,6 +209,20 @@ class Handler(SimpleHTTPRequestHandler):
                 fh.write(json.dumps(history, ensure_ascii=False, separators=(",", ":")) + "\n")
 
             self.send_json(200, {"ok": True, "id": history_id, "path": str(history_path)})
+        except Exception as exc:
+            self.send_json(400, {"ok": False, "error": str(exc)})
+
+    def handle_clear_history(self):
+        try:
+            RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+            removed = []
+            for path in RESULTS_DIR.glob("*"):
+                if not path.is_file():
+                    continue
+                if path.name in {"trials.jsonl", "history.jsonl"} or path.name.startswith("history-") or path.name.endswith(".json"):
+                    path.unlink(missing_ok=True)
+                    removed.append(path.name)
+            self.send_json(200, {"ok": True, "removed": removed})
         except Exception as exc:
             self.send_json(400, {"ok": False, "error": str(exc)})
 

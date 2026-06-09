@@ -883,10 +883,25 @@ function csvCell(value) {
   return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 
-function clearHistory() {
-  if (!confirm("Vaciar el historial local de calibraciones?")) return;
-  localStorage.removeItem(STORAGE_KEYS.history);
-  renderHistory();
+async function clearHistory() {
+  if (!confirm("Vaciar el historial local y del servidor?")) return;
+  try {
+    setBusy(true);
+    localStorage.removeItem(STORAGE_KEYS.history);
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith("calibreriego.history.")) localStorage.removeItem(key);
+    });
+    if (isLocalProxy()) {
+      await requestLocalJson("/api/clear-history", {});
+    }
+    loadedServerTrials = [];
+    renderHistory();
+    renderHistoricalSummary("Historico vaciado");
+  } catch (error) {
+    renderHistoricalSummary(`No se pudo vaciar el historico: ${error.message}`);
+  } finally {
+    setBusy(false);
+  }
 }
 
 

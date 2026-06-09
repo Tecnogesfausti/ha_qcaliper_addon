@@ -110,3 +110,7 @@ Con `ingress: true`, Home Assistant debe mostrar el boton `Open Web UI` en la fi
 ## Changelog
 
 See `CHANGELOG.md` for the version history.
+
+## Historico
+
+El modo historico puede guardar un JSON agregado con el rango seleccionado, las pruebas filtradas y los resúmenes por sensor. Ese archivo sirve para análisis posteriores de factores y ecuaciones.

@@ -90,6 +90,7 @@ const els = {
   historyNotes: document.querySelector("#historyNotes"),
   historyAnalyzeButton: document.querySelector("#historyAnalyzeButton"),
   historyLoadButton: document.querySelector("#historyLoadButton"),
+  historySaveButton: document.querySelector("#historySaveButton"),
   historySummary: document.querySelector("#historySummary"),
 };
 
@@ -140,6 +141,7 @@ function init() {
   els.modeHistoryButton.addEventListener("click", () => setMode("history"));
   els.historyAnalyzeButton.addEventListener("click", analyzeHistoricalAdjustments);
   els.historyLoadButton.addEventListener("click", loadServerTrials);
+  els.historySaveButton.addEventListener("click", saveHistoricalSummary);
   setMode("sample");
 }
 
@@ -173,6 +175,12 @@ async function loadServerTrials() {
 }
 
 function analyzeHistoricalAdjustments() {
+  const dataset = buildHistoricalDataset();
+  const rows = dataset.sensors.map((sensor) => summarizeTrials(dataset.filtered, sensor));
+  renderHistoricalSummary(buildHistoricalSummary(rows, dataset.filtered.length, dataset.notes, dataset.from, dataset.to));
+}
+
+function buildHistoricalDataset() {
   const allTrials = [...readJson(STORAGE_KEYS.history, []), ...loadedServerTrials];
   const from = parseDateTimeInput(els.historyFrom.value);
   const to = parseDateTimeInput(els.historyTo.value);
@@ -185,11 +193,15 @@ function analyzeHistoricalAdjustments() {
     if (sensorMode !== "both" && trial.sensorMode && trial.sensorMode !== sensorMode) return false;
     return true;
   });
-
-  const sensors = sensorMode === "both" ? ["caudalimetro", "pulsometro"] : [sensorMode];
-  const rows = sensors.map((sensor) => summarizeTrials(filtered, sensor));
-  const notes = els.historyNotes.value.trim();
-  renderHistoricalSummary(buildHistoricalSummary(rows, filtered.length, notes, from, to));
+  return {
+    allTrials,
+    filtered,
+    from,
+    to,
+    sensorMode,
+    sensors: sensorMode === "both" ? ["caudalimetro", "pulsometro"] : [sensorMode],
+    notes: els.historyNotes.value.trim(),
+  };
 }
 
 function summarizeTrials(trials, sensor) {
@@ -788,6 +800,35 @@ function renderHistory() {
     `;
     els.historyList.append(card);
   });
+}
+
+
+async function saveHistoricalSummary() {
+  try {
+    const dataset = buildHistoricalDataset();
+    const rows = dataset.sensors.map((sensor) => summarizeTrials(dataset.filtered, sensor));
+    const payload = {
+      id: createId(),
+      createdAt: new Date().toISOString(),
+      kind: "historical",
+      sensorMode: dataset.sensorMode,
+      from: dataset.from ? dataset.from.toISOString() : null,
+      to: dataset.to ? dataset.to.toISOString() : null,
+      notes: dataset.notes,
+      summary: rows,
+      trialCount: dataset.filtered.length,
+      trialIds: dataset.filtered.map((trial) => trial.id || trial.createdAt || trial.created_at),
+      trials: dataset.filtered,
+    };
+
+    localStorage.setItem(`calibreriego.history.${payload.id}`, JSON.stringify(payload));
+    if (isLocalProxy()) {
+      await requestLocalJson("/api/save-history", payload);
+    }
+    renderHistoricalSummary("Historico guardado: " + payload.id);
+  } catch (error) {
+    renderHistoricalSummary(`No se pudo guardar historico: ${error.message}`);
+  }
 }
 
 function exportHistory() {

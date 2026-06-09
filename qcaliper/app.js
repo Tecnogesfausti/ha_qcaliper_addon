@@ -516,7 +516,7 @@ async function stopRelays() {
 }
 
 async function requestLocalJson(path, body) {
-  const response = await fetch(path, {
+  const response = await fetch(resolveLocalPath(path), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -530,7 +530,7 @@ async function requestLocalJson(path, body) {
 
 
 async function requestLocalGetJson(path) {
-  const response = await fetch(path, { method: "GET" });
+  const response = await fetch(resolveLocalPath(path), { method: "GET" });
   const payload = await response.json();
   if (!response.ok || payload.ok === false) {
     throw new Error(payload.error || `Servidor local responde ${response.status}`);
@@ -540,6 +540,10 @@ async function requestLocalGetJson(path) {
 
 function isLocalProxy() {
   return window.location.protocol.startsWith("http") && window.location.hostname !== "";
+}
+
+function resolveLocalPath(path) {
+  return new URL(path.replace(/^\//, ""), window.location.href).toString();
 }
 
 function shouldFallbackToDirectHa(error) {
@@ -565,7 +569,7 @@ async function requestHa(path, options = {}) {
   const useLocalProxy = isLocalProxy();
   if (!useLocalProxy && (!haUrl || !haToken)) throw new Error("Configura HA_URL y HA_TOKEN");
 
-  const url = useLocalProxy ? `/api/ha${path}` : `${haUrl.replace(/\/$/, "")}${path}`;
+  const url = useLocalProxy ? resolveLocalPath(`/api/ha${path}`) : `${haUrl.replace(/\/$/, "")}${path}`;
   const headers = { "Content-Type": "application/json" };
   if (!useLocalProxy) headers.Authorization = `Bearer ${haToken}`;
 

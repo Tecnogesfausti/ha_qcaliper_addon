@@ -1,7 +1,7 @@
 name: QCaliper
 slug: qcaliper
 description: Calibrador y logger de pulsos de riego para Home Assistant.
-version: 1.0.9
+version: 1.0.10
 arch:
   - amd64
   - aarch64
